@@ -1,4 +1,4 @@
-# Obsidian Open in Top Window
+# Obsidian Floating Settings
 
 [中文帮助](https://github.com/wish5115/obsidian-floating-settings/blob/main/README-zh.md)
 
