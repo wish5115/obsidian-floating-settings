@@ -1,0 +1,56 @@
+/* 隐藏原设置窗口的背景遮罩和关闭按钮 */
+:is(.floating-settings-popover, .floating-plugin-market-popover) :is(.modal-bg, .modal-close-button) {
+  display: none;
+}
+/* 修改默认原设置窗口的宽高以适应hoverEditor */
+:is(.floating-settings-popover, .floating-plugin-market-popover) .modal.mod-sidebar-layout {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+/* 隐藏popover顶部的show-navbar按钮 */
+:is(.floating-settings-popover, .floating-plugin-market-popover) .popover-action.mod-show-navbar{
+  display: none;
+}
+/* 隐藏popover中非hoverEditor的视图 */
+.floating-settings-popover .workspace-leaf:has([data-type='surfing-view']) {
+  display: none;
+}
+/* 设置左侧栏显示隐藏按钮 */
+.floating-settings-popover .side-show-hide-btn{
+  margin-top: 5px;
+  margin-left: 5px;
+  padding: 5px;
+  border-radius: 5px;
+  width: fit-content;
+  height: fit-content;
+}
+.floating-settings-popover .side-show-hide-btn svg.svg-icon{
+  vertical-align: text-top;
+}
+.floating-settings-popover .side-show-hide-btn:hover{
+  background-color: var(--background-modifier-hover);
+}
+/* 侧边栏隐藏 */
+.floating-settings-popover .mod-settings .vertical-tab-header.with-hide {
+  display: none;
+}
+/* 右侧内区边距减去显示隐藏按钮宽度 */
+.floating-settings-popover .mod-settings .vertical-tab-content.with-show-hide-btn{
+  padding-inline-start: calc(var(--size-4-12) - 28px);
+}
+/* pin按钮禁用 */
+:is(.floating-settings-popover, .floating-plugin-market-popover) .popover-header-icon.mod-pin-popover{
+  pointer-events: none;
+}
+/* 临时隐藏插件市场 */
+/* body.with-plugin-market-hide .modal-container:has(.mod-community-modal) {
+  display: none;
+} */
+/* 插件市场弹窗边距 */
+.floating-plugin-market-popover .workspace-leaf-content .view-content {
+  padding: 0;
+}

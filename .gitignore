@@ -1,0 +1,29 @@
+# vscode
+.vscode
+.history
+
+# Intellij
+*.iml
+.idea
+
+# npm
+node_modules
+
+# Don't include the compiled main.js file in the repo.
+# They should be uploaded to GitHub releases instead.
+
+# Exclude sourcemaps
+*.map
+
+# obsidian
+data.json
+
+# git
+.git
+
+# Exclude macOS Finder (System Explorer) View States
+.DS_Store
+.history
+main_副本.js
+main-no-market.js
+styles-no-market.css
