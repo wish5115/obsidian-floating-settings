@@ -53,7 +53,7 @@ const langMap = {
     "When you open the setting, the last selected tab automatically scrolls to the visual area.": "打开设置时，上次选中的标签自动滚动到可视区域。",
     "Left sidebar can be displayed or hidden": "左侧栏可显示或隐藏",
     "Click the button in the upper right corner of the left sidebar to show or hide the left sidebar.": "点击左侧栏右上角的按钮可显示或隐藏左侧栏。",
-    "Note: All of the above actions take effect the next time you open the Settings panel!": "注意：以上操作均是下次打开时生效！",
+    "Note: All of the above actions take effect the next time you open the Settings panel!": "注意：以上操作均为下次打开时生效！",
     //plugin
     "Open the Floating Settings": "打开悬浮设置",
     "Hover Editor is required for this plugin to work.": "依赖插件Hover Editor未安装或未开启",
@@ -66,8 +66,8 @@ const langMap = {
 // 设置默认值
 const DEFAULT_SETTINGS = {
   isReplaceDefaultSettings: true,
-  width: 932.667,
-  height: 583.333,
+  width: 900,
+  height: 600,
   maxWaitTime: 10,
   isHoverEditorNotice: true,
   isFloatMarket: true,

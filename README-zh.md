@@ -16,6 +16,8 @@
 
 - 左侧面板可隐藏或显示，选中标签自动滚动到可视窗口内。
 
+- 当未安装Hover Editor时退化为默认设置面板。
+
 # 安装
 
 到这里下载 [Floating Settings](https://github.com/wish5115/obsidian-floating-settings/releases/)
@@ -27,9 +29,9 @@
 
 # 使用
 
-1. `ctrl+p` to open the command panel, select the command "Open Hover Settings".
+1. `ctrl+p`打开命令面板，选则“打开悬浮设置”命令即可。
 
-2. If "Replace the Default Settings" is checked in Settings, you can also turn it on via the Settings button in the bottom left corner.
+2. 如果在设置中勾选了“替换默认设置”选项，也可以通过左下角的设置按钮打开。
 
 # 截图
 

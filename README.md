@@ -20,6 +20,8 @@ This is useful when you need to set a certain style or feature and need to open 
 
 - The left panel can be hidden or shown. Selected tabs automatically scroll to the visible window.
 
+- Degrades to the default settings panel when Hover Editor is not installed or enabled.
+
 # Installation
 
 Go here to download [Floating Settings](https://github.com/wish5115/obsidian-floating-settings/releases/)
