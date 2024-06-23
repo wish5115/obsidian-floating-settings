@@ -332,7 +332,7 @@ module.exports = class extends Plugin {
           app.setting.activeTab.navEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        // popover标题点击和拖动事件
+        // popover标题点击事件
         lastPopover.titleEl.addEventListener('click', () => {
           this.activePopover(leaf, lastPopover);
         });
@@ -342,7 +342,10 @@ module.exports = class extends Plugin {
       });
     } else {
       //激活弹窗
-      if(this.popoverLeaf && this.popover) this.activePopover(this.popoverLeaf, this.popover);
+      if(this.popoverLeaf && this.popover) {
+        this.activePopover(this.popoverLeaf, this.popover);
+        this.restorePopover(this.popover);
+      }
     }
   }
 
@@ -363,6 +366,7 @@ module.exports = class extends Plugin {
       }
       //document.body.classList.remove("with-plugin-market-hide");
       this.activePopover(this.lastMarketPopoverLeaf, this.lastMarketPopover);
+      this.restorePopover(this.lastMarketPopover);
       return;
     }
     // 创建leaf和视图
@@ -478,6 +482,14 @@ module.exports = class extends Plugin {
     listenDocumentClick();
     await sleep(100);
     this.isActivating = false;
+  }
+
+  // 恢复popover窗口
+  restorePopover(popover) {
+    if(!popover) return;
+    if(popover.hoverEl?.classList.contains("is-minimized")) {
+      popover.toggleMinimized();
+    }
   }
 }
 
