@@ -97,6 +97,10 @@ module.exports = class extends Plugin {
   lastMarketPopover = null;
   // 插件市场popover所在leaf
   lastMarketPopoverLeaf = null;
+  // 插件市场激活popover
+  marketActivePopovers = [];
+  // 所有激活popover
+  allActivePopovers = [];
   // 默认打开设置面板函数
   originSettingOpen = this.app.setting.open.bind(this.app.setting);
   // 打开悬浮设置视图函数
@@ -171,11 +175,10 @@ module.exports = class extends Plugin {
     // 重置openTab事件(开发时对app.setting的修改，恢复理想状态需要重启)
     this.app.setting.openTab = async (tab) => {
       this.originalOpenTab(tab);
-      const i18n = i18next.getDataByLanguage(i18next.language||'en');
       // 监听about标签的注册和购买按钮事件
       if(tab.id === "about"){
-        const registerBtnText = i18n.default.plugins.sync["button-sign-up"];
-        const buyBtnText = i18n.default.plugins.sync["button-purchase-subscription"];
+        const registerBtnText = i18next.t("plugins.sync.button-sign-up");
+        const buyBtnText = i18next.t("plugins.sync.button-purchase-subscription");
         await sleep(100);
         tab.containerEl.querySelectorAll(".setting-item-control button").forEach(button => {
           if(button.textContent === registerBtnText || button.textContent === buyBtnText) {
@@ -191,7 +194,7 @@ module.exports = class extends Plugin {
       }
       // 监听插件市场，浏览按钮事件
       if(tab.id === "community-plugins" && this.settings.isFloatMarket){
-        const browseBtnText = i18n.default.setting["third-party-plugin"]["button-browse"];
+        const browseBtnText = i18next.t("setting.third-party-plugin.button-browse");
         await sleep(100);
         tab.containerEl.parentElement.addEventListener('click', async (event) => {
           if(event.target.textContent === browseBtnText  && this.settings.isFloatMarket) {
@@ -203,9 +206,14 @@ module.exports = class extends Plugin {
               popover.hoverEl.querySelector(".community-modal-search-results").addEventListener('click', ()=>{
                 const marketDetail = popover.hoverEl.querySelector(".community-modal-details");
                 if(!marketDetail?.getAttribute("data-bind")){
-                  const optionText = i18n.default.setting.options;
-                  const hotkeyText = i18n.default.setting.hotkeys.name;
-                  marketDetail.addEventListener('click', (event) => {
+                  const optionText = i18next.t("setting.options");
+                  const hotkeyText = i18next.t("setting.hotkeys.name");
+                  const enableBtnText = i18next.t("setting.third-party-plugin.button-enable");
+                  const disabledBtnText = i18next.t("setting.third-party-plugin.button-disable");
+                  const installBtnText = i18next.t("setting.third-party-plugin.button-install");
+                  const uninstallBtnText = i18next.t("setting.third-party-plugin.label-uninstall");
+                  marketDetail.addEventListener('click', async (event) => {
+                    // 监听选项和快捷键按钮
                     if(event.target.textContent === optionText || event.target.textContent === hotkeyText){
                       // 没有替换默认设置面板时，在popover插件市场里点击选项等，需要调用打开悬浮设置面板
                       if(!this.settings.isReplaceDefaultSettings) {
@@ -216,6 +224,27 @@ module.exports = class extends Plugin {
                         this.openFloatingSettingsView();
                       }
                     }
+                    //监听设置面板的禁用和卸载按钮
+                    if(event.target.textContent === disabledBtnText || event.target.textContent === enableBtnText || event.target.textContent === uninstallBtnText){
+                      if(app.setting.lastTabId === "community-plugins"){
+                        await sleep(100)
+                        this.popover.hoverEl.querySelector(".vertical-tab-content-container .search-input-container input").trigger("input");
+                      }
+                    }
+                    //监听安装按钮
+                    if(event.target.textContent === installBtnText){
+                      const observer = new MutationObserver((mutationsList) => {
+                        for(const mutation of mutationsList) {
+                            if (mutation.type === 'childList') {
+                                setTimeout(() => {
+                                  this.popover.hoverEl.querySelector(".vertical-tab-content-container .search-input-container input").trigger("input");
+                                }, 100);
+                                observer.disconnect();
+                            }
+                        }
+                      });
+                      observer.observe(marketDetail, { childList: true });
+                    }
                   });
                   marketDetail.setAttr("data-bind", true);
                 }
@@ -225,6 +254,38 @@ module.exports = class extends Plugin {
             };
             // 打开插件市场面板
             this.openFloatingPluginMarketView(onShow);
+          }
+          // 监听插件市场的开启关闭插件按钮和删除插件按钮
+          const delBtnText = i18next.t("setting.third-party-plugin.label-uninstall");
+          if((event.target.classList.contains("checkbox-container") && event.target.closest(".installed-plugins-container")) ||
+            (event.target.getAttribute("aria-label") === delBtnText && event.target.closest(".installed-plugins-container"))
+          ) {
+            if(this.marketActivePopovers.length > 0) {
+              // 更新插件市场详情
+              const updateMarketDetail = () => {
+                this.marketActivePopovers.forEach(popover => {
+                  // 更新列表
+                  const searchInput = popover.hoverEl.querySelector(".search-input-container input");
+                  if(searchInput) searchInput.trigger("input");
+                  // 更新详情页面
+                  const selectedItem = popover.hoverEl.querySelector(".community-modal-search-results .community-item.is-selected");
+                  if(selectedItem) selectedItem.click();
+                });
+              }
+              if(event.target.getAttribute("aria-label") === delBtnText){
+                await sleep(100);
+                const uninstallBtn = document.querySelector(".modal-container.mod-confirmation.mod-dim");
+                uninstallBtn.addEventListener('click', async (event) => {
+                  if(event.target.textContent === delBtnText) {
+                    await sleep(100);
+                    updateMarketDetail();
+                  }
+                }, {once: true});
+              } else {
+                await sleep(100);
+                updateMarketDetail();
+              }
+            }
           }
         });
       }
@@ -277,8 +338,12 @@ module.exports = class extends Plugin {
       this.convertLeafToPopover(leaf, async () => {
         // 获取当前悬浮窗实例
         const lastPopover = hoverEditor.activePopovers.last();
+        // 绑定最小化按钮函数
+        lastPopover.toggleMinimized = this.toggleMinimized.bind(lastPopover);
         // 赋值弹窗本次实例
         this.popover = lastPopover;
+        // 赋值激活的popover
+        this.allActivePopovers.push(lastPopover);
         //设置弹窗信息
         const setPopoverReact = async () => {
           await nextFrame();
@@ -299,6 +364,8 @@ module.exports = class extends Plugin {
         lastPopover.hoverEl.classList.add(FLOAT_SETTING_POPOVER_CLASS);
         setIcon(lastPopover.pinEl, "settings");
         setPopoverReact();
+        //判断是应该置于modal窗口之上
+        this.shouldOverModal(lastPopover);
 
         // 设置显示隐藏按钮
         const setShowHideBtn = () => {
@@ -379,8 +446,14 @@ module.exports = class extends Plugin {
     this.convertLeafToPopover(leaf, async () => {
       // 获取当前悬浮窗实例
       const lastPopover = hoverEditor.activePopovers.last();
+      // 绑定最小化按钮函数
+      lastPopover.toggleMinimized = this.toggleMinimized.bind(lastPopover);
       // 赋值弹窗本次实例
       this.lastMarketPopover = lastPopover;
+      // 赋值插件市场激活的popover
+      this.marketActivePopovers.push(lastPopover);
+      // 赋值全部激活popover
+      this.allActivePopovers.push(lastPopover);
       //设置弹窗信息
       const setPopoverReact = async () => {
         await nextFrame();
@@ -401,8 +474,10 @@ module.exports = class extends Plugin {
       lastPopover.hoverEl.classList.add(FLOAT_PLUGIN_MARKET_POPOVER_CLASS);
       setIcon(lastPopover.pinEl, "plug");
       setPopoverReact();
+      //判断是应该置于modal窗口之上
+      this.shouldOverModal(lastPopover);
 
-      // popover标题点击和拖动事件
+      // popover标题点击事件
       lastPopover.titleEl.addEventListener('click', () => {
         this.activePopover(leaf, lastPopover);
       });
@@ -431,6 +506,9 @@ module.exports = class extends Plugin {
   async activePopover(leaf, popover) {
     if(this.isActivating) return;
     if(!leaf || !popover) return;
+    //判断是应该置于modal窗口之上
+    this.shouldOverModal(popover);
+    // 如果已激活返回
     if(popover.hoverEl.classList.contains("is-active")) return;
     this.isActivating = true;
     // 取消上一次激活的popover焦点
@@ -449,32 +527,33 @@ module.exports = class extends Plugin {
     } else {
       titleEl.removeAttribute("data-path");
     }
-    const i18n = i18next.getDataByLanguage(i18next.language||'en');
     // 监听document点击事件
     const listenDocumentClick = () => {
-      document.addEventListener('click', function(event) {
+      document.addEventListener('click', (event) => {
+        // 点击类型，当前popover，其他popover, 特殊按钮，其他
         const targetPopover = event.target.closest(".hover-popover.hover-editor");
+        //  如果不在当前popover
         if(popover.hoverEl !== targetPopover) {
           // targetPopover null或 在别的popover中，并且被点击的按钮不是 打开悬浮设置按钮(一般是用cmdr添加的按钮)
           if(!event.target.classList.contains("floating-settings:open-the-floating-settings") &&
           !(event.target.classList.contains("lucide-maximize") || event.target.classList.contains("lucide-minimize")) &&
-            event.target.textContent !== i18n.default.setting.options &&
-            event.target.textContent !== i18n.default.setting["third-party-plugin"]["button-browse"]
+            event.target.textContent !== i18next.t("setting.options") &&
+            event.target.textContent !== i18next.t("setting.third-party-plugin.button-browse")
           ) {
             popover.hoverEl?.removeClass("is-active");
           } else {
-            // 如果被点击的按钮不是 打开悬浮设置按钮，重新监听document点击事件
+            // 如果被点击的按钮不是打开悬浮设置按钮，重新监听document点击事件
             listenDocumentClick();
           }
-          // 在别的popover中
+          // 在别的popover中，且不是点击的选项按钮和浏览按钮，目标窗口激活
           if(targetPopover &&
-            event.target.textContent !== i18n.default.setting.options &&
-            event.target.textContent !== i18n.default.setting["third-party-plugin"]["button-browse"]
+            event.target.textContent !== i18next.t("setting.options") &&
+            event.target.textContent !== i18next.t("setting.third-party-plugin.button-browse")
           ) {
             targetPopover?.addClass("is-active");
           }
         } else {
-          // 点击在当前popover，什么都不做，再次监听document点击事件
+          // 点击发生在在hoverEditor中，什么都不做，再次监听document点击事件
           listenDocumentClick();
         }
       }, {once: true});
@@ -489,6 +568,65 @@ module.exports = class extends Plugin {
     if(!popover) return;
     if(popover.hoverEl?.classList.contains("is-minimized")) {
       popover.toggleMinimized();
+    }
+  }
+
+  // 判断是否需要置于modal窗口之上
+  shouldOverModal(popover) {
+    // 如果是数组，则批量操作
+    if(Array.isArray(popover)) {
+      popover.forEach(hover=>{
+        this.shouldOverModal(hover);
+      });
+    }
+    //判断是否存在modal窗口，有modal窗口需要把弹窗zIndex设为calc(var(--layer-modal) + 1);
+    if(document.querySelector(".modal-container.mod-dim:not(.modal-settings)")){
+      // 如果有modal窗口，则添加with-over-modal
+      if(!popover?.hoverEl?.classList?.contains("with-over-modal")) popover.hoverEl.classList.add("with-over-modal");
+
+      // 监听modal窗口被关闭
+      const observer = new MutationObserver((mutationsList) => {
+        for(const mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                const removedNodes = Array.from(mutation.removedNodes);
+                const isModalRemoved = removedNodes.some(node =>
+                  node.classList.contains('modal-container') &&
+                  node.classList.contains('mod-dim') &&
+                  !node.classList.contains('modal-settings')
+                );
+                if (isModalRemoved) {
+                    // modal窗口被关闭时再次检查是否需要置于modal窗口之上
+                    this.shouldOverModal(popover);
+                    observer.disconnect();
+                }
+            }
+        }
+      });
+      observer.observe(document.body, { childList: true });
+    } else {
+      // 如果没有modal窗口，则移除with-over-modal
+      if(popover?.hoverEl?.classList?.contains("with-over-modal")) popover.hoverEl.classList.remove("with-over-modal");
+    }
+  }
+
+  // popover最小化和还原
+  toggleMinimized(popover) {
+    popover = popover || this;
+    const hoverEl = popover.hoverEl;
+    const headerHeight = popover.titleEl.offsetHeight;
+    if (!hoverEl.hasAttribute("data-restore-height")) {
+      hoverEl.setAttribute("data-restore-height", String(hoverEl.offsetHeight));
+      hoverEl.style.minHeight = headerHeight + "px";
+      hoverEl.style.maxHeight = headerHeight + "px";
+      hoverEl.toggleClass("is-minimized", true);
+    } else {
+      const restoreHeight = hoverEl.getAttribute("data-restore-height");
+      if (restoreHeight) {
+        hoverEl.removeAttribute("data-restore-height");
+        hoverEl.style.height = restoreHeight + "px";
+      }
+      hoverEl.style.removeProperty("max-height");
+      hoverEl.toggleClass("is-minimized", false);
     }
   }
 }
@@ -511,6 +649,7 @@ class FloatSettingView extends ItemView {
     const container = this.containerEl.children[1];
     container.empty();
     // 这里不是通过api或点击事件打开的，所以这里不会进入modal模式
+    app.setting.modalEl.parentElement.classList.add("modal-settings");
     container.appendChild(app.setting.modalEl.parentElement);
   }
   async onClose() {

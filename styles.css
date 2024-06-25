@@ -54,3 +54,7 @@
 .floating-plugin-market-popover .workspace-leaf-content .view-content {
   padding: 0;
 }
+/* 有modal窗口时，特殊情况需置于modal窗口之上 */
+:is(.floating-settings-popover, .floating-plugin-market-popover).with-over-modal{
+  z-index: calc(var(--layer-modal) + 1)!important;
+}
