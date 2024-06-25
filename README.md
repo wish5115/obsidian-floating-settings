@@ -24,6 +24,18 @@ This is useful when you need to set a certain style or feature and need to open 
 
 # Installation
 
+1. BRAT Installation
+
+Ensure BRAT is installed
+
+Enter the command BRAT: Plugins: Add a beta plugin for testing
+
+Enter wish5115/obsidian-floating-settings
+
+Click on Add Plugin
+
+2. Download Installation
+
 Go here to download [Floating Settings](https://github.com/wish5115/obsidian-floating-settings/releases/)
 
 After download, unzip obsidian-floating-settings.zip, put it into plugin directory, restart obsidian, and don't forget to open the plugin in settings.

@@ -20,6 +20,18 @@
 
 # 安装
 
+1. BRAT安装
+
+确保已安装 BRAT插件
+
+打开命令面板输入命令: BRAT: Plugins: Add a beta plugin for testing
+
+弹窗对话框中输入 wish5115/obsidian-floating-settings
+
+点击Add Plugin按钮开始安装
+
+2. 下载安装
+
 到这里下载 [Floating Settings](https://github.com/wish5115/obsidian-floating-settings/releases/)
 
 下载后把 obsidian-floating-settings.zip 解压，放到插件目录，重启 obsidian，然后别忘了到设置里开启插件即可。
