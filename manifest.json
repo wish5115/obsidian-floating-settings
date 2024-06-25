@@ -1,7 +1,7 @@
 {
   "id": "floating-settings",
   "name": "Floating Settings",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "minAppVersion": "1.5.8",
   "description": "Open the Floating Settings panel or replace the default settings modal with a floating panel. Depends on the Hover Editor.",
   "author": "Wilson",
