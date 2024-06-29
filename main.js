@@ -197,14 +197,17 @@ module.exports = class extends Plugin {
         const browseBtnText = i18next.t("setting.third-party-plugin.button-browse");
         await sleep(100);
         tab.containerEl.parentElement.addEventListener('click', async (event) => {
-          if(event.target.textContent === browseBtnText  && this.settings.isFloatMarket) {
+          // 是否插件列表被点击
+          const isPluginItem = event.target.classList.contains("setting-item-info") || event.target.closest(".setting-item-info");
+          // 是否浏览被点击或插件列表被点击
+          if((event.target.textContent === browseBtnText || isPluginItem)  && this.settings.isFloatMarket) {
             if(!this.popover || !this.popover.hoverEl.contains(event.target)) return;
             // 暂时隐藏插件市场
             //document.body.classList.add("with-plugin-market-hide");
+            // onShow回调
             const onShow = (popover, leaf) => {
-              // onShow回调
-              popover.hoverEl.querySelector(".community-modal-search-results").addEventListener('click', ()=>{
-                const marketDetail = popover.hoverEl.querySelector(".community-modal-details");
+              // 插件详情页绑定事件
+              const marketDetailBindEvent = (marketDetail)=>{
                 if(!marketDetail?.getAttribute("data-bind")){
                   const optionText = i18next.t("setting.options");
                   const hotkeyText = i18next.t("setting.hotkeys.name");
@@ -248,7 +251,16 @@ module.exports = class extends Plugin {
                   });
                   marketDetail.setAttr("data-bind", true);
                 }
-              });
+              };
+              let marketDetail = popover.hoverEl.querySelector(".community-modal-details");
+              if(marketDetail){
+                marketDetailBindEvent(marketDetail);
+              } else {
+                popover.hoverEl.querySelector(".community-modal-search-results").addEventListener('click', ()=>{
+                  marketDetail = popover.hoverEl.querySelector(".community-modal-details");
+                  marketDetailBindEvent(marketDetail);
+                });
+              }
               // 恢复隐藏插件市场
               //document.body.classList.remove("with-plugin-market-hide");
             };
@@ -404,6 +416,9 @@ module.exports = class extends Plugin {
           this.activePopover(leaf, lastPopover);
         });
 
+        // setting-search插件 默认选中
+        document.querySelector(".settings-search-input input[type=search]")?.select();
+
         // onShow回调函数
         if(typeof onShow === 'function') onShow(lastPopover, leaf);
       });
@@ -538,7 +553,8 @@ module.exports = class extends Plugin {
           if(!event.target.classList.contains("floating-settings:open-the-floating-settings") &&
           !(event.target.classList.contains("lucide-maximize") || event.target.classList.contains("lucide-minimize")) &&
             event.target.textContent !== i18next.t("setting.options") &&
-            event.target.textContent !== i18next.t("setting.third-party-plugin.button-browse")
+            event.target.textContent !== i18next.t("setting.third-party-plugin.button-browse") &&
+            !(event.target.classList.contains("setting-item-info") || event.target.closest(".setting-item-info"))
           ) {
             popover.hoverEl?.removeClass("is-active");
           } else {
@@ -578,6 +594,12 @@ module.exports = class extends Plugin {
       popover.forEach(hover=>{
         this.shouldOverModal(hover);
       });
+    }
+    // 当有modal窗口时，暂时退化为原始设置窗口（因为悬浮设置光标聚焦等有问题）
+    if(document.querySelector(".modal-container.mod-dim:not(.modal-settings)")){
+      popover?.hide();
+      this.originSettingOpen();
+      return;
     }
     //判断是否存在modal窗口，有modal窗口需要把弹窗zIndex设为calc(var(--layer-modal) + 1);
     if(document.querySelector(".modal-container.mod-dim:not(.modal-settings)")){
