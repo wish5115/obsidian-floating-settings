@@ -198,7 +198,8 @@ module.exports = class extends Plugin {
         await sleep(100);
         tab.containerEl.parentElement.addEventListener('click', async (event) => {
           // 是否插件列表被点击
-          const isPluginItem = event.target.classList.contains("setting-item-info") || event.target.closest(".setting-item-info");
+          const isPluginItem = (event.target.classList.contains("setting-item-info") || event.target.closest(".setting-item-info")) &&
+            event.target.closest(".installed-plugins-container");
           // 是否浏览被点击或插件列表被点击
           if((event.target.textContent === browseBtnText || isPluginItem)  && this.settings.isFloatMarket) {
             if(!this.popover || !this.popover.hoverEl.contains(event.target)) return;
@@ -554,7 +555,7 @@ module.exports = class extends Plugin {
           !(event.target.classList.contains("lucide-maximize") || event.target.classList.contains("lucide-minimize")) &&
             event.target.textContent !== i18next.t("setting.options") &&
             event.target.textContent !== i18next.t("setting.third-party-plugin.button-browse") &&
-            !(event.target.classList.contains("setting-item-info") || event.target.closest(".setting-item-info"))
+            !((event.target.classList.contains("setting-item-info") || event.target.closest(".setting-item-info")) && event.target.closest(".installed-plugins-container"))
           ) {
             popover.hoverEl?.removeClass("is-active");
           } else {
