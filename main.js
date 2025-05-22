@@ -331,7 +331,14 @@ module.exports = class extends Plugin {
   }
 
   // 打开悬浮设置视图
+  hasOpenedFloatSettings = false;
   async openFloatingSettingsView(onShow = ()=>{}) {
+    // 防止双击等多次被点击
+    if(this.hasOpenedFloatSettings) return;
+    this.hasOpenedFloatSettings = true;
+    setTimeout(() => {
+      this.hasOpenedFloatSettings = false;
+    }, 350);
     const hoverEditor = this.hoverEditor();
     // 未开启或安装hover editor则使用默认设置面板打开
     if(!hoverEditor) {
@@ -340,11 +347,22 @@ module.exports = class extends Plugin {
     }
     if(!document.querySelector('.' + FLOAT_SETTING_POPOVER_CLASS)){
       // 创建leaf和视图
-      const leaf = app.workspace.createLeafInParent(app.workspace.floatingSplit);
+      const leaf = app.workspace.getRightLeaf(false); // 右边栏方案
+      //const lastLeaf = app.workspace.activeLeaf;
+	    //const leaf = app.workspace.getLeaf('tab'); // tab方案
+      // lastLeaf.tabHeaderEl.addClasses(['is-active', 'mod-active']);
+      // lastLeaf.containerEl.classList.add('mod-active');
+      // lastLeaf.containerEl.style.display = '';
+      leaf.containerEl.classList.add('floating-settings-leaf');
+      leaf.tabHeaderEl.classList.add('floating-settings-tab-header');
+      //const leaf = app.workspace.createLeafInParent(app.workspace.floatingSplit); // floatingSplit方案，1.8+不支持
       await leaf.setViewState({
         type: FLOAT_SETTING_VIEW_TYPE,
         active: false,
       });
+      // lastLeaf.tabHeaderEl.addClasses(['is-active', 'mod-active']); // tab方案
+      // lastLeaf.containerEl.classList.add('mod-active');
+      // lastLeaf.containerEl.style.display = '';
       this.popoverLeaf = leaf;
       // 把leaf转换为悬浮面板
       app.setting.openTabById(app.setting.lastTabId||app.setting.settingTabs[0]?.id);
@@ -420,6 +438,13 @@ module.exports = class extends Plugin {
         // setting-search插件 默认选中
         document.querySelector(".settings-search-input input[type=search]")?.select();
 
+        // 恢复leaf可见（tab方案需要定时，右边栏方案不需要）
+        //setTimeout(async () => {
+          leaf.containerEl.style.display = '';
+          leaf.containerEl.classList.remove('floating-settings-leaf');
+          //leaf.tabHeaderEl.classList.remove('floating-settings-tab-header');
+        //}, 50);
+
         // onShow回调函数
         if(typeof onShow === 'function') onShow(lastPopover, leaf);
       });
@@ -453,7 +478,11 @@ module.exports = class extends Plugin {
       return;
     }
     // 创建leaf和视图
-    const leaf = app.workspace.createLeafInParent(app.workspace.floatingSplit);
+    const leaf =  app.workspace.getRightLeaf(false); // 右边栏方案
+	  // const leaf = app.workspace.getLeaf('tab'); // tab方案
+    leaf.containerEl.classList.add('floating-settings-market-leaf');
+    leaf.tabHeaderEl.classList.add('floating-settings-market-tab-header');
+    //const leaf = app.workspace.createLeafInParent(app.workspace.floatingSplit); // 浮动方案 1.8+不支持
     await leaf.setViewState({
       type: FLOAT_PLUGIN_MARKET_VIEW_TYPE,
       active: false,
@@ -488,6 +517,10 @@ module.exports = class extends Plugin {
       };
       // 设置弹窗样式
       lastPopover.hoverEl.classList.add(FLOAT_PLUGIN_MARKET_POPOVER_CLASS);
+      // 取消隐藏样式 右边栏和tab方案需要
+      leaf.containerEl.style.display = '';
+      leaf.containerEl.classList.remove('floating-settings-market-leaf');
+      //leaf.tabHeaderEl.classList.remove('floating-settings-market-tab-header');
       setIcon(lastPopover.pinEl, "plug");
       setPopoverReact();
       //判断是应该置于modal窗口之上
