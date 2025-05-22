@@ -58,3 +58,20 @@
 :is(.floating-settings-popover, .floating-plugin-market-popover).with-over-modal{
   z-index: calc(var(--layer-modal) + 1)!important;
 }
+/* 隐藏临时leaf tab方案 */
+.mod-root .workspace-tabs .workspace-leaf.floating-settings-leaf,
+.popover.hover-editor .workspace-leaf.floating-settings-market-leaf {
+  display: none;
+}
+.workspace .mod-root .workspace-tab-header.floating-settings-tab-header {
+  display: none;
+}
+/* 隐藏临时leaf 右边栏方案 */
+.mod-right-split .workspace-tab-container .workspace-leaf.floating-settings-leaf,
+.mod-right-split .workspace-tab-container .workspace-leaf.floating-settings-market-leaf{
+  display: none;
+}
+.mod-right-split .workspace-tab-header.floating-settings-tab-header,
+.mod-right-split .workspace-tab-header.floating-settings-market-tab-header{
+  display: none;
+}
